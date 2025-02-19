@@ -12,7 +12,84 @@ A local HTTP server that powers the Moly app by providing capabilities for searc
 
 ## Building and Running
 
-> ⚠️ **Note**: TODO
+1. [Install Rust](https://www.rust-lang.org/tools/install).
+
+2. Obtain the source code for this repository:
+
+```sh
+git clone https://github.com/moxin-org/moly-server.git
+```
+
+3. Follow the platform-specific instructions below.
+
+### macOS
+
+Install the required WasmEdge WASM runtime:
+
+```sh
+curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install_v2.sh | bash -s -- --version=0.14.1
+
+source $HOME/.wasmedge/env
+```
+
+Then use `cargo` to build and run the server:
+
+```sh
+cd moly-server
+cargo run -p moly-server
+```
+
+### Linux
+
+Install the required WasmEdge WASM runtime:
+
+```sh
+curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install_v2.sh | bash -s -- --version=0.14.1
+
+source $HOME/.wasmedge/env
+```
+
+> [!IMPORTANT]
+> If your CPU does not support AVX512, then you should append the `--noavx` option onto the above command.
+
+To build Moly on Linux, you must install the following dependencies: `openssl`,
+`clang`/`libclang`, `binfmt`. On a Debian-like Linux distro (e.g., Ubuntu), run
+the following:
+
+```sh
+sudo apt-get update
+sudo apt-get install libssl-dev pkg-config llvm clang libclang-dev binfmt-support
+```
+
+Then use `cargo` to build and run the Moly server:
+
+```sh
+cd moly-server
+cargo run -p moly-server
+```
+
+## Windows (Windows 10, Windows 11 or higher)
+
+1. Install the required WasmEdge WASM runtime from the WasmEdge releases page:
+   [`WasmEdge-0.14.1-windows.msi`](https://github.com/WasmEdge/WasmEdge/releases/download/0.14.1/WasmEdge-0.14.1-windows.msi)
+
+2. Download and extract the appropriate WASI-NN/GGML plugin for your system:
+
+    - For CUDA 11/12:
+      [`WasmEdge-plugin-wasi_nn-ggml-cuda-0.14.1-windows-x86_64.zip`](https://github.com/WasmEdge/WasmEdge/releases/download/0.14.1/WasmEdge-plugin-wasi_nn-ggml-cuda-0.14.1-windows_x86_64.zip)
+    - For CPUs with AVX512 support:
+      [`WasmEdge-plugin-wasi_nn-ggml-0.14.1-windows-x86_64.zip`](ttps://github.com/WasmEdge/WasmEdge/releases/download/0.14.1/WasmEdge-plugin-wasi_nn-ggml-0.14.1-windows_x86_64.zip)
+    - Otherwise:
+      [`WasmEdge-plugin-wasi_nn-ggml-noavx-0.14.1-windows-x86_64.zip`](ttps://github.com/WasmEdge/WasmEdge/releases/download/0.14.1/WasmEdge-plugin-wasi_nn-ggml-noavx-0.14.1-windows_x86_64.zip)
+
+3. Copy the plugin DLL from that archive `.\lib\wasmedge\wasmedgePluginWasiNN.dll` to `Program Files\WasmEdge\lib\`
+
+4. Then use `cargo` to build and run the Moly server:
+
+    ```sh
+    cd moly-server
+    cargo run -p moly-server
+    ```
 
 ## Development
 
