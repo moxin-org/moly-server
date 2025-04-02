@@ -65,11 +65,15 @@ async fn delete_file(
     State(state): State<Arc<ApiState>>,
     AxumPath(id): AxumPath<String>,
 ) -> Result<Json<()>, ApiErrorResponse> {
-    state
-        .backend
-        .read()
-        .await
-        .delete_file(id)
+    // If the file is being used, make sure to eject the model first.
+    let mut state = state.backend.write().await;
+    if let Some(model_id) = state.currently_loaded_model_id() {
+        if model_id == &id {
+            state.eject_model().await;
+        }
+    }
+
+    state.delete_file(id)
         .map(Json)
         .map_err(internal_error)
 }
