@@ -339,6 +339,7 @@ async fn main() {
         .nest("/downloads", download_routes())
         .nest("/models", model_routes())
         .nest("/api/v1", open_ai_api_routes())
+        .route("/ping", get(|| async { "pong" }))
         .layer(
             tower_http::trace::TraceLayer::new_for_http()
                 .on_request(|request: &Request<_>, _: &_| {
