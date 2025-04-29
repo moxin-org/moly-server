@@ -5,6 +5,24 @@ on:
     # every Sunday at 12:00 UTC (00:00 AOE)
     - cron: "0 12 * * 0"
   workflow_dispatch:
+    inputs:
+      nightly:
+        required: false
+        type: boolean
+        default: "true"
+      release_name:
+        required: false
+        type: string
+      release_tag:
+        required: false
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PACKAGE_ID: "moly-server"
 
 jobs:
   build:
@@ -17,12 +35,22 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v4
 
-      - name: Determine release metadata
+      - name: Determine release tag
+        if: ${{ ! github.event.inputs.release_tag }}
         run: |
           export TZ=UTC
-          version=$(cargo metadata --format-version=1 --no-deps | jq -r '.packages[] | select(.name == "moly-server") | .version')
-          echo "RELEASE_NAME=nightly-$(date +'%Y-%m-%d')" >> "$GITHUB_ENV"
-          echo "RELEASE_VERSION=${version}+nightly.$(date +'%Y%m%d')" >> "$GITHUB_ENV"
+          version=$(cargo metadata --format-version=1 --no-deps | jq -r '.packages[] | select(.name == "${{ env.PACKAGE_ID }}") | .version')
+
+          if [[ "${{ github.event.inputs.nightly }}" == "true" ]]; then
+              echo "RELEASE_TAG=v${version}+nightly.$(date +'%Y%m%d')" >> "$GITHUB_ENV"
+          else
+              echo "RELEASE_TAG=v${version}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Determine release name
+        if: ${{ ! github.events.inputs.release_name }}
+        run: |
+          echo "RELEASE_NAME=${{ env.PACKAGE_ID }} ${{ env.RELEASE_TAG }}" >> "$GITHUB_ENV"
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -44,14 +72,12 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          token: ${{ secrets.GH_PAT }}
           name: ${{ env.RELEASE_NAME }}
-          tag_name: v${{ env.RELEASE_VERSION }}
-          prerelease: true
+          tag_name: ${{ env.RELEASE_TAG }}
+          prerelease: ${{ github.events.inputs.nightly == 'true' }}
           files: |
             moly-server-*.tar.gz
             moly-server-*.zip
           body: |
-            Nightly testing release.
-
-            Build: `v${{ env.RELEASE_VERSION }}` (${{ github.sha }})
+            Build version: `${{ env.RELEASE_TAG }}` (${{ github.sha }})
+          token: ${{ secrets.GH_PAT }}
