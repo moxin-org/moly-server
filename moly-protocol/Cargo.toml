@@ -1,6 +1,6 @@
 [package]
 name = "moly-protocol"
-version = "0.2.0-rc1"
+version = "0.2.0"
 edition = "2021"
 description = "Protocol definitions for the Moly server and client communication"
 authors = ["Moxin Organization"]
