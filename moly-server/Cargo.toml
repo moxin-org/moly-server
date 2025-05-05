@@ -1,6 +1,6 @@
 [package]
 name = "moly-server"
-version = "0.2.0-rc1"
+version = "0.2.0"
 edition = "2021"
 description = "A local HTTP server for the Moly app that provides support for searching, downloading, and running local LLMs"
 authors = ["Moxin Organization"]
