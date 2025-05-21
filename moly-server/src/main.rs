@@ -4,7 +4,8 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use axum::extract::{Path as AxumPath, Query, State};
-use axum::http::{Request, StatusCode};
+use axum::http::request::Parts;
+use axum::http::{HeaderValue, Request, StatusCode};
 use axum::response::sse::{Event, Sse};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{delete, get, post};
@@ -12,6 +13,7 @@ use axum::{Json, Router};
 
 use futures_util::Stream;
 use tokio::sync::RwLock;
+use tower_http::cors::{AllowOrigin, Any, CorsLayer};
 
 use api_errors::*;
 use backend_impls::{BackendImpl, LlamaEdgeApiServerBackend};
@@ -73,9 +75,7 @@ async fn delete_file(
         }
     }
 
-    state.delete_file(id)
-        .map(Json)
-        .map_err(internal_error)
+    state.delete_file(id).map(Json).map_err(internal_error)
 }
 
 /// List all current downloads.
@@ -334,12 +334,26 @@ async fn main() {
 
     let state = Arc::new(ApiState::new(app_data_dir, models_dir).await);
 
+    // Configure CORS middleware to allow requests from browsers running on localhost
+    let cors_layer = CorsLayer::new()
+        .allow_origin(AllowOrigin::predicate(
+            |origin: &HeaderValue, _request_parts: &Parts| {
+                origin.as_bytes().starts_with(b"http://localhost:")
+                    || origin.as_bytes().starts_with(b"http://127.0.0.1:")
+                    || origin.as_bytes().starts_with(b"https://localhost:")
+                    || origin.as_bytes().starts_with(b"https://127.0.0.1:")
+            },
+        ))
+        .allow_headers(Any)
+        .allow_credentials(false);
+
     let app = Router::new()
         .nest("/files", file_routes())
         .nest("/downloads", download_routes())
         .nest("/models", model_routes())
         .nest("/api/v1", open_ai_api_routes())
         .route("/ping", get(|| async { "pong" }))
+        .layer(cors_layer)
         .layer(
             tower_http::trace::TraceLayer::new_for_http()
                 .on_request(|request: &Request<_>, _: &_| {
@@ -393,7 +407,7 @@ fn model_routes() -> Router<Arc<ApiState>> {
         .route("/eject", post(eject_model))
         .route("/featured", get(get_featured_models))
         .route("/search", get(search_models))
-        // .route("/models_dir", post(update_models_dir)) // Not sure if we will support this, or how.
+    // .route("/models_dir", post(update_models_dir)) // Not sure if we will support this, or how.
 }
 
 fn open_ai_api_routes() -> Router<Arc<ApiState>> {
