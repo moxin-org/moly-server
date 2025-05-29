@@ -118,7 +118,13 @@ fn create_wasi(
     add_args!("-r", reverse_prompt);
     add_args!("--socket-addr", listen_addr);
 
-    WasiModule::create(Some(args), None, None)
+    let llama_log = std::env::var("LLAMA_LOG").unwrap_or("warn".to_string());
+
+    WasiModule::create(
+        Some(args),
+        Some(vec![&format!("LLAMA_LOG={llama_log}")]),
+        None,
+    )
 }
 
 pub fn run_wasm_by_downloaded_file(
