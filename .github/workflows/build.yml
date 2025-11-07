@@ -25,22 +25,22 @@ jobs:
             arch: x86_64
             rust_toolchain: stable
             rust_target: x86_64-unknown-linux-gnu
-            label: moly-server-ubuntu-x86_64
+            label: moly-local-ubuntu-x86_64
           - os: macos-14
             arch: x86_64
             rust_toolchain: stable
             rust_target: x86_64-apple-darwin
-            label: moly-server-darwin-x86_64
+            label: moly-local-darwin-x86_64
           - os: macos-14
             arch: aarch64
             rust_toolchain: stable
             rust_target: aarch64-apple-darwin
-            label: moly-server-darwin-aarch64
+            label: moly-local-darwin-aarch64
           - os: windows-2022
             arch: x86_64
             rust_toolchain: stable
             rust_target: x86_64-pc-windows-msvc
-            label: moly-server-windows-x86_64
+            label: moly-local-windows-x86_64
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -96,7 +96,7 @@ jobs:
       - name: cargo build
         run: |
           cargo build --locked --release \
-              --bin=moly-server \
+              --bin=moly-local \
               --target="${{ matrix.rust_target }}" \
               --target-dir=target
 
@@ -136,7 +136,7 @@ jobs:
       - name: Copy binary artifacts
         run: |
           mkdir -p "$DIST_DIR/bin"
-          cp "target/${{ matrix.rust_target }}/release/moly-server" "$DIST_DIR/bin/"
+          cp "target/${{ matrix.rust_target }}/release/moly-local" "$DIST_DIR/bin/"
 
       - name: Copy resource files
         run: |
@@ -149,17 +149,17 @@ jobs:
             --strip-unneeded \
             --remove-section=.comment \
             --remove-section=.note \
-            "$DIST_DIR/bin/moly-server"
+            "$DIST_DIR/bin/moly-local"
 
       - name: Patch binary with relative rpath (Linux)
         if: runner.os == 'Linux'
         run: |
-          patchelf --set-rpath '$ORIGIN/../lib' "$DIST_DIR/bin/moly-server"
+          patchelf --set-rpath '$ORIGIN/../lib' "$DIST_DIR/bin/moly-local"
 
       - name: Patch binary with relative rpath (macOS)
         if: runner.os == 'macOS'
         run: |
-          install_name_tool -add_rpath '@executable_path/../lib' "$DIST_DIR/bin/moly-server"
+          install_name_tool -add_rpath '@executable_path/../lib' "$DIST_DIR/bin/moly-local"
 
       - name: Upload dist archive
         uses: actions/upload-artifact@v4
