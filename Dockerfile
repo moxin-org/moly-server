@@ -37,13 +37,13 @@ RUN --mount=type=cache,target=/usr/local/cargo/git/db \
     cargo install \
       --locked \
       --profile=release \
-      --path=./moly-server \
+      --path=./moly-local \
       --root=/usr/local; \
     strip \
       --strip-unneeded \
       --remove-section=.comment \
       --remove-section=.note \
-      /usr/local/bin/moly-server
+      /usr/local/bin/moly-local
 
 FROM debian:bookworm-slim AS runtime
 
@@ -60,7 +60,7 @@ COPY --from=build --parents $WASMEDGE_DIR/lib $WASMEDGE_DIR/plugin /
 RUN echo "$WASMEDGE_DIR/lib" > /etc/ld.so.conf.d/wasmedge.conf \
       && ldconfig
 
-COPY --from=build /usr/local/bin/moly-server /usr/local/bin/moly-server
+COPY --from=build /usr/local/bin/moly-local /usr/local/bin/moly-local
 
 USER moly
 VOLUME ["/var/lib/moly"]
@@ -71,4 +71,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=5s \
   CMD curl -f http://localhost:8765/ping || exit 1
 
 EXPOSE 8765
-CMD ["moly-server"]
+CMD ["moly-local"]

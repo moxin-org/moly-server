@@ -365,7 +365,7 @@ async fn main() {
         )
         .with_state(state);
 
-    let port = std::env::var("MOLY_SERVER_PORT")
+    let port = std::env::var("MOLY_LOCAL_PORT")
         .ok()
         .and_then(|p| p.parse::<u16>().ok())
         .unwrap_or(8765);

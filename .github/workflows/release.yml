@@ -22,7 +22,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PACKAGE_ID: "moly-server"
+  PACKAGE_ID: "moly-local"
 
 jobs:
   build:
@@ -59,7 +59,7 @@ jobs:
 
       - name: Generate archives
         run: |
-          for dir in moly-server-*; do
+          for dir in moly-local-*; do
               if [[ $dir == *"windows"* ]]; then
                   echo "Generating ZIP archive: ${dir}.zip"
                   zip -r "${dir}.zip" "$dir"
@@ -76,8 +76,8 @@ jobs:
           tag_name: ${{ env.RELEASE_TAG }}
           prerelease: ${{ github.events.inputs.nightly == 'true' }}
           files: |
-            moly-server-*.tar.gz
-            moly-server-*.zip
+            moly-local-*.tar.gz
+            moly-local-*.zip
           body: |
             Build version: `${{ env.RELEASE_TAG }}` (${{ github.sha }})
           token: ${{ secrets.GH_PAT }}

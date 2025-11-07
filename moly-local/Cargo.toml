@@ -1,5 +1,5 @@
 [package]
-name = "moly-server"
+name = "moly-local"
 version = "0.2.0"
 edition = "2021"
 description = "A local HTTP server for the Moly app that provides support for searching, downloading, and running local LLMs"

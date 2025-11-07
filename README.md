@@ -1,4 +1,4 @@
-# Moly Server
+# Moly Local
 
 A local HTTP server that powers the Moly app by providing capabilities for searching, downloading, and running local Large Language Models (LLMs). This server integrates with WasmEdge for model execution and provides an OpenAI-compatible API interface.
 
@@ -17,7 +17,7 @@ A local HTTP server that powers the Moly app by providing capabilities for searc
 2. Obtain the source code for this repository:
 
 ```sh
-git clone https://github.com/moxin-org/moly-server.git
+git clone https://github.com/moxin-org/moly-local.git
 ```
 
 3. Follow the platform-specific instructions below.
@@ -35,8 +35,8 @@ source $HOME/.wasmedge/env
 Then use `cargo` to build and run the server:
 
 ```sh
-cd moly-server
-cargo run -p moly-server
+cd moly-local
+cargo run -p moly-local
 ```
 
 ### Linux
@@ -61,11 +61,11 @@ sudo apt-get update
 sudo apt-get install libssl-dev pkg-config llvm clang libclang-dev binfmt-support
 ```
 
-Then use `cargo` to build and run the Moly server:
+Then use `cargo` to build and run Moly Local:
 
 ```sh
-cd moly-server
-cargo run -p moly-server
+cd moly-local
+cargo run -p moly-local
 ```
 
 ## Windows (Windows 10, Windows 11 or higher)
@@ -84,11 +84,11 @@ cargo run -p moly-server
 
 3. Copy the plugin DLL from that archive `.\lib\wasmedge\wasmedgePluginWasiNN.dll` to `Program Files\WasmEdge\lib\`
 
-4. Then use `cargo` to build and run the Moly server:
+4. Then use `cargo` to build and run Moly Local:
 
     ```sh
-    cd moly-server
-    cargo run -p moly-server
+    cd moly-local
+    cargo run -p moly-local
     ```
 
 ## Development
@@ -96,7 +96,7 @@ cargo run -p moly-server
 To run the server locally:
 
 ```bash
-cargo run -p moly-server
+cargo run -p moly-local
 ```
 
 The server will start on the configured port (default: 8765) and log its address.
@@ -105,7 +105,7 @@ The server will start on the configured port (default: 8765) and log its address
 
 The server can be configured using the following environment variables:
 
-- `MOLY_SERVER_PORT`: Port number for the HTTP server (default: 8765)
+- `MOLY_LOCAL_PORT`: Port number for the HTTP server (default: 8765)
 - `MODEL_CARDS_REPO`: Custom repository URL for model cards
 - `MOLY_API_SERVER_ADDR`: Custom address for the API server (default: localhost:0)
 

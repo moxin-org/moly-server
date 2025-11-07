@@ -2,7 +2,7 @@
 name = "moly-protocol"
 version = "0.2.0"
 edition = "2021"
-description = "Protocol definitions for the Moly server and client communication"
+description = "Protocol definitions for Moly Local and client communication"
 authors = ["Moxin Organization"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
