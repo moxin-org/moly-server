@@ -1,12 +1,9 @@
 use directories::ProjectDirs;
-use std::{
-    path::PathBuf,
-    sync::OnceLock,
-};
+use std::{path::PathBuf, sync::OnceLock};
 
-// By default use the same organization directory as the Moly app. 
+// By default use the same organization directory as the Moly app.
 pub const APP_QUALIFIER: &str = "com";
-pub const APP_ORGANIZATION: &str = "moxin-org";
+pub const APP_ORGANIZATION: &str = "moly-ai";
 pub const APP_NAME: &str = "moly";
 
 pub fn project_dirs() -> &'static ProjectDirs {
