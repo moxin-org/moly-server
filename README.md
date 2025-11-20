@@ -17,7 +17,7 @@ A local HTTP server that powers the Moly app by providing capabilities for searc
 2. Obtain the source code for this repository:
 
 ```sh
-git clone https://github.com/moxin-org/moly-local.git
+git clone https://github.com/moly-ai/moly-local.git
 ```
 
 3. Follow the platform-specific instructions below.
