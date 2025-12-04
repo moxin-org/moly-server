@@ -326,8 +326,8 @@ fn create_wasi(
     };
 
     let n_gpu_layers = match load_model.gpu_layers {
-        moly_protocol::protocol::GPULayers::Specific(n) => Some(n.to_string()),
-        moly_protocol::protocol::GPULayers::Max => None,
+        moly_protocol::protocol::GpuLayers::Specific(n) => Some(n.to_string()),
+        moly_protocol::protocol::GpuLayers::Max => None,
     };
 
     // Set n_batch to a fixed value of 128.

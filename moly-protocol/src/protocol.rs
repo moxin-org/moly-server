@@ -7,12 +7,12 @@ use std::sync::mpsc::Sender;
 
 #[derive(Debug, Deserialize)]
 pub struct StartDownloadRequest {
-    pub file_id: FileID,
+    pub file_id: FileId,
 }
 
 #[derive(Clone, Debug)]
 pub enum FileDownloadResponse {
-    Progress(FileID, f32),
+    Progress(FileId, f32),
     Completed(DownloadedFile),
 }
 
@@ -24,7 +24,7 @@ pub enum ContextOverflowPolicy {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum GPULayers {
+pub enum GpuLayers {
     Specific(u32),
     Max,
 }
@@ -33,7 +33,7 @@ pub enum GPULayers {
 pub struct LoadModelOptions {
     pub override_server_address: Option<String>,
     pub prompt_template: Option<String>,
-    pub gpu_layers: GPULayers,
+    pub gpu_layers: GpuLayers,
     pub use_mlock: bool,
     pub n_batch: Option<u32>,
     pub n_ctx: Option<u32>,
@@ -46,14 +46,14 @@ pub struct LoadModelOptions {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct LoadModelRequest {
-    pub file_id: FileID,
+    pub file_id: FileId,
     pub options: LoadModelOptions,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct LoadedModelInfo {
-    pub file_id: FileID,
-    pub model_id: ModelID,
+    pub file_id: FileId,
+    pub model_id: ModelId,
 
     // The port where the local server is listening for the model.
     // if 0, the server is not running.
@@ -71,7 +71,7 @@ pub struct ModelResourcesInfo {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum LoadModelResponse {
-    Progress(FileID, f32),
+    Progress(FileId, f32),
     Completed(LoadedModelInfo),
     ModelResourcesUsage(ModelResourcesInfo),
 }
@@ -127,15 +127,15 @@ pub enum Command {
     // The argument is a string with the keywords to search for.
     SearchModels(String, Sender<Result<Vec<Model>>>),
 
-    DownloadFile(FileID, Sender<Result<FileDownloadResponse>>),
-    PauseDownload(FileID, Sender<Result<()>>),
-    CancelDownload(FileID, Sender<Result<()>>),
-    DeleteFile(FileID, Sender<Result<()>>),
+    DownloadFile(FileId, Sender<Result<FileDownloadResponse>>),
+    PauseDownload(FileId, Sender<Result<()>>),
+    CancelDownload(FileId, Sender<Result<()>>),
+    DeleteFile(FileId, Sender<Result<()>>),
 
     GetCurrentDownloads(Sender<Result<Vec<PendingDownload>>>),
     GetDownloadedFiles(Sender<Result<Vec<DownloadedFile>>>),
 
-    LoadModel(FileID, LoadModelOptions, Sender<Result<LoadModelResponse>>),
+    LoadModel(FileId, LoadModelOptions, Sender<Result<LoadModelResponse>>),
 
     // Eject currently loaded model, if any is provided
     EjectModel(Sender<Result<()>>),

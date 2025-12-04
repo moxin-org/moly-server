@@ -1,18 +1,19 @@
 use std::{
-    collections::HashMap, path::{Path, PathBuf}, sync::{
-        Arc, Mutex,
-    }
+    collections::HashMap,
+    path::{Path, PathBuf},
+    sync::{Arc, Mutex},
 };
 
 use chrono::Utc;
 use moly_protocol::{
-    data::{DownloadedFile, FileID, PendingDownload},
-    open_ai::{ChatRequestData, ChatResponse, ModelsResponse, OpenAIModel},
-    protocol::{
-        FileDownloadResponse, LoadModelOptions, LoadModelResponse
-    },
+    data::{DownloadedFile, FileId, PendingDownload},
+    open_ai::{ChatRequestData, ChatResponse, ModelsResponse, OpenAiModel},
+    protocol::{FileDownloadResponse, LoadModelOptions, LoadModelResponse},
 };
-use tokio::sync::{mpsc::{UnboundedSender, Sender, Receiver}, RwLock};
+use tokio::sync::{
+    mpsc::{Receiver, Sender, UnboundedSender},
+    RwLock,
+};
 
 use crate::store::{
     self,
@@ -21,18 +22,18 @@ use crate::store::{
 };
 
 mod api_server;
-// Commenting out this implementation as it is not being used anywhere and requires 
+// Commenting out this implementation as it is not being used anywhere and requires
 // a lot of reworking to be used with the http server.
 // mod chat_ui;
 
 #[derive(Debug, Clone)]
 pub enum DownloadControlCommand {
-    Stop(FileID),
+    Stop(FileId),
 }
 
 // TODO: Should we just remove ChatBotModel? is not being used anywhere
 // pub type ChatModelBackend = BackendImpl<chat_ui::ChatBotModel>;
-pub type LlamaEdgeApiServerBackend = BackendImpl<api_server::LLamaEdgeApiServer>;
+pub type LlamaEdgeApiServerBackend = BackendImpl<api_server::LlamaEdgeApiServer>;
 
 pub trait BackendModel: Sized {
     /// Creates a new model or reloads an existing one.
@@ -82,7 +83,11 @@ pub struct BackendImpl<Model: BackendModel> {
 
 impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
     /// Builds a backend instance by initializing the model indexes and the file downloader.
-    pub async fn build<A: AsRef<Path>, M: AsRef<Path>>(app_data_dir: A, models_dir: M, max_download_threads: usize) -> Self {
+    pub async fn build<A: AsRef<Path>, M: AsRef<Path>>(
+        app_data_dir: A,
+        models_dir: M,
+        max_download_threads: usize,
+    ) -> Self {
         let app_data_dir = app_data_dir.as_ref().to_path_buf();
 
         log::info!("build by app_data_dir: {:?}", app_data_dir);
@@ -120,8 +125,13 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
 
         {
             let client = reqwest::Client::new();
-            let downloader =
-                ModelFileDownloader::new(client, sql_conn.clone(), control_tx.clone(), model_indexs.country_code.clone(), 0.1);
+            let downloader = ModelFileDownloader::new(
+                client,
+                sql_conn.clone(),
+                control_tx.clone(),
+                model_indexs.country_code.clone(),
+                0.1,
+            );
 
             tokio::spawn(ModelFileDownloader::run_loop(
                 downloader,
@@ -152,13 +162,14 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
                 .split_once("#")
                 .ok_or_else(|| anyhow::anyhow!("Illegal file_id"))?;
 
-            let index = self.model_indexs
+            let index = self
+                .model_indexs
                 .get_index_by_id(model_id)
                 .ok_or(anyhow::anyhow!("No model found"))?
                 .clone();
-            
+
             let remote_model = self.model_indexs.load_model_card(&index)?;
-            
+
             let remote_file = remote_model
                 .files
                 .into_iter()
@@ -208,23 +219,25 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
 
         // Create a channel for progress updates that we'll handle with SSE later
         let (progress_tx, progress_rx) = tokio::sync::mpsc::channel(100);
-        self.download_progress.write().await.insert(file_id.clone(), progress_rx);
-        
+        self.download_progress
+            .write()
+            .await
+            .insert(file_id.clone(), progress_rx);
+
         // Start the download
-        self.download_tx.send((
-            model,
-            file.clone(),
-            remote_file,
-            progress_tx
-        ))?;
+        self.download_tx
+            .send((model, file.clone(), remote_file, progress_tx))?;
 
         Ok(())
     }
 
     /// Returns the progress channel for a given file ID.
-    pub async fn get_download_progress_channel(&mut self, file_id: String) 
-    -> anyhow::Result<Receiver<anyhow::Result<FileDownloadResponse>>> {
-        let rx = self.download_progress
+    pub async fn get_download_progress_channel(
+        &mut self,
+        file_id: String,
+    ) -> anyhow::Result<Receiver<anyhow::Result<FileDownloadResponse>>> {
+        let rx = self
+            .download_progress
             .write()
             .await
             .remove(&file_id) // TODO:(Julian) we should only remove the channel once the download is complete
@@ -239,10 +252,7 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
 
     pub fn delete_file(&self, file_id: String) -> Result<(), anyhow::Error> {
         store::download_files::DownloadedFile::remove(&file_id, &self.open_db_conn())?;
-        store::remove_downloaded_file(
-            self.models_dir.to_string_lossy().to_string(),
-            file_id,
-        )
+        store::remove_downloaded_file(self.models_dir.to_string_lossy().to_string(), file_id)
     }
 
     pub fn get_current_downloads(&self) -> Result<Vec<PendingDownload>, anyhow::Error> {
@@ -256,19 +266,20 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
     }
 
     pub fn cancel_download(&self, file_id: String) -> Result<(), anyhow::Error> {
-        self.control_tx.send(DownloadControlCommand::Stop(file_id.clone()))?;
+        self.control_tx
+            .send(DownloadControlCommand::Stop(file_id.clone()))?;
         store::download_files::DownloadedFile::remove(&file_id, &self.open_db_conn())?;
-        store::remove_downloaded_file(
-            self.models_dir.to_string_lossy().to_string(),
-            file_id,
-        )
+        store::remove_downloaded_file(self.models_dir.to_string_lossy().to_string(), file_id)
     }
 
-    pub async fn load_model_with_default_opts(&mut self, file_id: String) -> Result<LoadModelResponse, anyhow::Error> {
+    pub async fn load_model_with_default_opts(
+        &mut self,
+        file_id: String,
+    ) -> Result<LoadModelResponse, anyhow::Error> {
         let default_opts = LoadModelOptions {
             override_server_address: None,
             prompt_template: None,
-            gpu_layers: moly_protocol::protocol::GPULayers::Max,
+            gpu_layers: moly_protocol::protocol::GpuLayers::Max,
             use_mlock: false,
             rope_freq_scale: 0.0,
             rope_freq_base: 0.0,
@@ -279,7 +290,11 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
         self.load_model(file_id, default_opts).await
     }
 
-    pub async fn load_model(&mut self, file_id: String, options: LoadModelOptions) -> Result<LoadModelResponse, anyhow::Error> {
+    pub async fn load_model(
+        &mut self,
+        file_id: String,
+        options: LoadModelOptions,
+    ) -> Result<LoadModelResponse, anyhow::Error> {
         let download_file =
             store::download_files::DownloadedFile::get_by_id(&self.open_db_conn(), &file_id);
 
@@ -293,7 +308,8 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
                     file,
                     options,
                     self.model_indexs.embedding_model(),
-                ).await;
+                )
+                .await;
 
                 match result {
                     Ok((model, response)) => {
@@ -318,7 +334,9 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
         }
     }
 
-    pub fn get_featured_models(&mut self) -> Result<Vec<moly_protocol::data::Model>, anyhow::Error> {
+    pub fn get_featured_models(
+        &mut self,
+    ) -> Result<Vec<moly_protocol::data::Model>, anyhow::Error> {
         let res = self.model_indexs.get_featured_model(100, 0);
         match res {
             Ok(indexs) => {
@@ -340,7 +358,10 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
         }
     }
 
-    pub fn search_models(&mut self, search_text: String) -> Result<Vec<moly_protocol::data::Model>, anyhow::Error> {
+    pub fn search_models(
+        &mut self,
+        search_text: String,
+    ) -> Result<Vec<moly_protocol::data::Model>, anyhow::Error> {
         let res = self.model_indexs.search(&search_text, 100, 0);
         match res {
             Ok(indexs) => {
@@ -375,12 +396,15 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
 
         Ok(ModelsResponse {
             object: "list".to_string(),
-            data: files.into_iter().map(|file| OpenAIModel {
-                id: file.file.id,
-                object: "model".to_string(),
-                created: file.downloaded_at.timestamp() as u32,
-                owned_by: "moly".to_string(),
-            }).collect(),
+            data: files
+                .into_iter()
+                .map(|file| OpenAiModel {
+                    id: file.file.id,
+                    object: "model".to_string(),
+                    created: file.downloaded_at.timestamp() as u32,
+                    owned_by: "moly".to_string(),
+                })
+                .collect(),
         })
     }
 
@@ -389,7 +413,11 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
     //     self.models_dir = models_dir.as_ref().to_path_buf();
     // }
 
-    pub fn chat(&self, data: ChatRequestData, tx: tokio::sync::mpsc::Sender<anyhow::Result<ChatResponse>>) -> Result<(), anyhow::Error> {
+    pub fn chat(
+        &self,
+        data: ChatRequestData,
+        tx: tokio::sync::mpsc::Sender<anyhow::Result<ChatResponse>>,
+    ) -> Result<(), anyhow::Error> {
         if let Some(model) = &self.model {
             model.chat(data, tx);
             Ok(())

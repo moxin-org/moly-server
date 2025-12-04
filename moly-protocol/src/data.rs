@@ -2,13 +2,13 @@ use std::collections::HashMap;
 
 use chrono::{DateTime, Utc};
 
-pub type FileID = String;
-pub type ModelID = String;
+pub type FileId = String;
+pub type ModelId = String;
 
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
 pub struct File {
     #[serde(default)]
-    pub id: FileID,
+    pub id: FileId,
     pub name: String,
     pub size: String,
     pub quantization: String,
@@ -75,7 +75,7 @@ pub struct PendingDownload {
 // models sources are added.
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
 pub struct Model {
-    pub id: ModelID,
+    pub id: ModelId,
     pub name: String,
     pub summary: String,
     pub size: String,

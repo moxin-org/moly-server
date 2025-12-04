@@ -16,7 +16,7 @@ pub struct ChatRequestData {
 
     // Not really necessary but it is part of the OpenAI API. We are going to send the id
     // of the model currently loaded.
-    pub model: ModelID,
+    pub model: ModelId,
 
     pub frequency_penalty: Option<f32>,
     #[serde(skip)]
@@ -108,7 +108,7 @@ pub struct ChatResponseData {
     pub id: String,
     pub choices: Vec<ChoiceData>,
     pub created: u32,
-    pub model: ModelID,
+    pub model: ModelId,
     #[serde(default)]
     pub system_fingerprint: String,
     pub usage: UsageData,
@@ -136,7 +136,7 @@ pub struct ChatResponseChunkData {
     pub id: String,
     pub choices: Vec<ChunkChoiceData>,
     pub created: u32,
-    pub model: ModelID,
+    pub model: ModelId,
     pub system_fingerprint: String,
 
     #[serde(default = "response_chunk_object")]
@@ -158,11 +158,11 @@ pub enum ChatResponse {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ModelsResponse {
     pub object: String,
-    pub data: Vec<OpenAIModel>,
+    pub data: Vec<OpenAiModel>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct OpenAIModel {
+pub struct OpenAiModel {
     pub id: String,
     pub object: String,
     pub created: u32,
