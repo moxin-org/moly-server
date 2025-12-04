@@ -7,7 +7,7 @@ use std::{
 use chrono::Utc;
 use moly_protocol::{
     data::{DownloadedFile, FileId, PendingDownload},
-    open_ai::{ChatRequestData, ChatResponse, ModelsResponse, OpenAIModel},
+    open_ai::{ChatRequestData, ChatResponse, ModelsResponse, OpenAiModel},
     protocol::{FileDownloadResponse, LoadModelOptions, LoadModelResponse},
 };
 use tokio::sync::{
@@ -279,7 +279,7 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
         let default_opts = LoadModelOptions {
             override_server_address: None,
             prompt_template: None,
-            gpu_layers: moly_protocol::protocol::GPULayers::Max,
+            gpu_layers: moly_protocol::protocol::GpuLayers::Max,
             use_mlock: false,
             rope_freq_scale: 0.0,
             rope_freq_base: 0.0,
@@ -398,7 +398,7 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
             object: "list".to_string(),
             data: files
                 .into_iter()
-                .map(|file| OpenAIModel {
+                .map(|file| OpenAiModel {
                     id: file.file.id,
                     object: "model".to_string(),
                     created: file.downloaded_at.timestamp() as u32,

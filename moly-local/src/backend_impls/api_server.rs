@@ -52,8 +52,8 @@ fn create_wasi(
     };
 
     let n_gpu_layers = match load_model.gpu_layers {
-        moly_protocol::protocol::GPULayers::Specific(n) => Some(n.to_string()),
-        moly_protocol::protocol::GPULayers::Max => None,
+        moly_protocol::protocol::GpuLayers::Specific(n) => Some(n.to_string()),
+        moly_protocol::protocol::GpuLayers::Max => None,
     };
 
     // Set n_batch to a fixed value of 128.
@@ -236,12 +236,15 @@ impl BackendModel for LLamaEdgeApiServer {
         };
 
         if !need_reload {
-            return Ok((old_model.unwrap(), LoadModelResponse::Completed(LoadedModelInfo {
-                file_id: file.id.to_string(),
-                model_id: file.model_id,
-                information: "".to_string(),
-                listen_port: listen_addr.port(),
-            })));
+            return Ok((
+                old_model.unwrap(),
+                LoadModelResponse::Completed(LoadedModelInfo {
+                    file_id: file.id.to_string(),
+                    model_id: file.model_id,
+                    information: "".to_string(),
+                    listen_port: listen_addr.port(),
+                }),
+            ));
         }
 
         // Only stop the old model if it is not failed
@@ -268,7 +271,7 @@ impl BackendModel for LLamaEdgeApiServer {
             run_wasm_by_downloaded_file(listen_addr, wasm_module_, file, options, embedding_)
         });
 
-        // TODO: this entire approach to testing the server is too hacky. 
+        // TODO: this entire approach to testing the server is too hacky.
         // We need a better solution for this.
 
         // Give the server a moment to start up
@@ -310,17 +313,21 @@ impl BackendModel for LLamaEdgeApiServer {
                 failed: false,
             };
 
-            Ok((new_model, LoadModelResponse::Completed(LoadedModelInfo {
-                file_id: file_.id.to_string(),
-                model_id: file_.model_id,
-                information: "".to_string(),
-                listen_port: listen_addr.port(),
-            })))
+            Ok((
+                new_model,
+                LoadModelResponse::Completed(LoadedModelInfo {
+                    file_id: file_.id.to_string(),
+                    model_id: file_.model_id,
+                    information: "".to_string(),
+                    listen_port: listen_addr.port(),
+                }),
+            ))
         } else {
-
             // Cleanup the spawned task if we failed to connect
             model_thread.abort();
-            Err(anyhow!("Failed to start the model: Server did not respond after multiple attempts"))
+            Err(anyhow!(
+                "Failed to start the model: Server did not respond after multiple attempts"
+            ))
         }
     }
 
@@ -353,9 +360,11 @@ impl BackendModel for LLamaEdgeApiServer {
             };
 
             let Some(resp) = resp else {
-                let _ = tx.send(Ok(ChatResponse::ChatResponseChunk(stop_chunk(
-                    StopReason::Stop,
-                )))).await;
+                let _ = tx
+                    .send(Ok(ChatResponse::ChatResponseChunk(stop_chunk(
+                        StopReason::Stop,
+                    ))))
+                    .await;
                 return;
             };
 
@@ -368,14 +377,17 @@ impl BackendModel for LLamaEdgeApiServer {
                             match chunk {
                                 Ok(chunk) => {
                                     if chunk.starts_with(b"data: [DONE]") {
-                                        let _ = tx.send(Ok(ChatResponse::ChatResponseChunk(stop_chunk(
-                                            StopReason::Stop,
-                                        )))).await;
+                                        let _ = tx
+                                            .send(Ok(ChatResponse::ChatResponseChunk(stop_chunk(
+                                                StopReason::Stop,
+                                            ))))
+                                            .await;
                                         break;
                                     }
                                     let resp: Result<ChatResponseChunkData, anyhow::Error> =
                                         serde_json::from_slice(&chunk[5..]).map_err(|e| anyhow!(e));
-                                    let _ = tx.send(resp.map(ChatResponse::ChatResponseChunk)).await;
+                                    let _ =
+                                        tx.send(resp.map(ChatResponse::ChatResponseChunk)).await;
                                 }
                                 Err(e) => {
                                     let _ = tx.send(Err(anyhow!(e))).await;
@@ -385,7 +397,12 @@ impl BackendModel for LLamaEdgeApiServer {
                         }
                     } else {
                         let resp = resp.json::<ChatResponseData>().await;
-                        let _ = tx.send(resp.map(ChatResponse::ChatFinalResponseData).map_err(|e| anyhow!(e))).await;
+                        let _ = tx
+                            .send(
+                                resp.map(ChatResponse::ChatFinalResponseData)
+                                    .map_err(|e| anyhow!(e)),
+                            )
+                            .await;
                     }
                 }
                 Err(e) => {

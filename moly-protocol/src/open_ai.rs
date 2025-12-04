@@ -158,11 +158,11 @@ pub enum ChatResponse {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ModelsResponse {
     pub object: String,
-    pub data: Vec<OpenAIModel>,
+    pub data: Vec<OpenAiModel>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct OpenAIModel {
+pub struct OpenAiModel {
     pub id: String,
     pub object: String,
     pub created: u32,

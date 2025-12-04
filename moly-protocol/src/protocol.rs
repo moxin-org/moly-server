@@ -24,7 +24,7 @@ pub enum ContextOverflowPolicy {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum GPULayers {
+pub enum GpuLayers {
     Specific(u32),
     Max,
 }
@@ -33,7 +33,7 @@ pub enum GPULayers {
 pub struct LoadModelOptions {
     pub override_server_address: Option<String>,
     pub prompt_template: Option<String>,
-    pub gpu_layers: GPULayers,
+    pub gpu_layers: GpuLayers,
     pub use_mlock: bool,
     pub n_batch: Option<u32>,
     pub n_ctx: Option<u32>,
