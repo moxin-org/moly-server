@@ -20,7 +20,7 @@ use super::BackendModel;
 static WASM: &[u8] = include_bytes!("../../wasm/llama-api-server.wasm");
 
 /// Use server which is OpenAI compatible
-pub struct LLamaEdgeApiServer {
+pub struct LlamaEdgeApiServer {
     id: String,
     listen_addr: SocketAddr,
     load_model_options: LoadModelOptions,
@@ -179,7 +179,7 @@ fn stop_chunk(reason: StopReason) -> ChatResponseChunkData {
     }
 }
 
-impl BackendModel for LLamaEdgeApiServer {
+impl BackendModel for LlamaEdgeApiServer {
     async fn new_or_reload(
         old_model: Option<Self>,
         file: crate::store::download_files::DownloadedFile,

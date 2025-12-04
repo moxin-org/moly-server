@@ -33,7 +33,7 @@ pub enum DownloadControlCommand {
 
 // TODO: Should we just remove ChatBotModel? is not being used anywhere
 // pub type ChatModelBackend = BackendImpl<chat_ui::ChatBotModel>;
-pub type LlamaEdgeApiServerBackend = BackendImpl<api_server::LLamaEdgeApiServer>;
+pub type LlamaEdgeApiServerBackend = BackendImpl<api_server::LlamaEdgeApiServer>;
 
 pub trait BackendModel: Sized {
     /// Creates a new model or reloads an existing one.
